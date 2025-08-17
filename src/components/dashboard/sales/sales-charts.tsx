@@ -6,7 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/co
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { format } from "date-fns"
 
-const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+// Extended color palette for unique category colors
+const CHART_COLORS = [
+  "#FF6B35", "#F7931E", "#FFD23F", "#06FFA5", "#118AB2", 
+  "#073B4C", "#EF476F", "#FFD166", "#06D6A0", "#7209B7",
+  "#F72585", "#4361EE", "#4CC9F0", "#7209B7", "#F77F00",
+  "#FCBF49", "#EAE2B7", "#003049", "#D62828", "#F77F00"
+];
+
+// Function to generate a unique color based on category name
+const generateColorFromName = (name: string): string => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % CHART_COLORS.length;
+  return CHART_COLORS[index];
+};
 
 interface SalesChartsProps {
   categoryData: { name: string; sales: number }[]
@@ -18,10 +34,10 @@ export default function SalesCharts({ categoryData, dailyData, monthlyData }: Sa
   
   const categoryChartConfig = React.useMemo(() => {
     const config: any = {};
-    categoryData.forEach((item, index) => {
+    categoryData.forEach((item) => {
         config[item.name] = {
             label: item.name,
-            color: CHART_COLORS[index % CHART_COLORS.length]
+            color: generateColorFromName(item.name)
         }
     })
     return config;

@@ -168,7 +168,7 @@ export default function AddInventoryDialog({ isOpen, onClose, categories, items 
             
             <DialogFooter>
                 <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
+                <Button type="submit" disabled={form.formState.isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
                     {form.formState.isSubmitting ? "Adding..." : "Add to Inventory"}
                 </Button>
             </DialogFooter>

@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Govinda Suite',
+  title: 'Govinda Mart',
   description: 'Role-based ERP system for inventory management.',
 };
 

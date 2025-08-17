@@ -87,7 +87,7 @@ export function Login() {
                 
                 {/* Screen content - Dashboard mockup */}
                 <circle cx="250" cy="120" r="20" fill="#f97316"/>
-                <text x="250" y="127" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">GS</text>
+                <text x="250" y="127" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">GM</text>
                 
                 {/* Dashboard elements */}
                 <rect x="185" y="150" width="130" height="12" rx="6" fill="#fed7aa"/>
@@ -126,7 +126,7 @@ export function Login() {
               <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg animate-bounce">
                 Live Dashboard
               </div>
-              <div className="absolute bottom-8 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg animate-pulse">
+              <div className="absolute bottom-8 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg animate-pulse">
                 Real-time Data
               </div>
             </div>
@@ -143,12 +143,12 @@ export function Login() {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">GS</span>
+                      <span className="text-white font-bold text-lg">GM</span>
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full border-2 border-white animate-pulse"></div>
                   </div>
                   <div className="text-left">
-                    <span className="text-lg font-bold text-gray-800 tracking-wide">GOVINDA SUITE</span>
+                    <span className="text-lg font-bold text-gray-800 tracking-wide">GOVINDA MART</span>
                     <p className="text-xs text-gray-500 font-medium">Inventory Management</p>
                   </div>
                 </div>
@@ -218,14 +218,6 @@ export function Login() {
                       )}
                     </button>
                   </div>
-                  <div className="text-right">
-                    <button 
-                      type="button"
-                      className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors duration-300 hover:underline"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
                 </div>
                 
                 {/* Error Message */}
@@ -239,7 +231,7 @@ export function Login() {
                 <Button
                   onClick={handleLogin}
                   disabled={isLoading}
-                  className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full h-14 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLoading ? (
                     <>
@@ -262,7 +254,7 @@ export function Login() {
             {/* Footer */}
             <div className="text-center mt-8">
               <p className="text-sm text-gray-500 font-medium">
-                © 2025 Govinda Suite. All rights reserved.
+                © 2025 Govinda Mart. All rights reserved.
               </p>
             </div>
             

@@ -70,7 +70,7 @@ export default function UserManagementTable({ allUsers }: UserManagementTablePro
                     <CardDescription>Create and manage admin accounts.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => setAddAdminOpen(true)}>
+                    <Button onClick={() => setAddAdminOpen(true)} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add New Admin
                     </Button>
                 </div>

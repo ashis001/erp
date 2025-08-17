@@ -89,7 +89,7 @@ export default function InventoryTable({ data, categories, items, admins, onData
                     ))}
                   </SelectContent>
                 </Select>
-                <Button onClick={() => setAddInventoryOpen(true)}>
+                <Button onClick={() => setAddInventoryOpen(true)} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Inventory
                 </Button>
               </div>
@@ -102,7 +102,7 @@ export default function InventoryTable({ data, categories, items, admins, onData
             </div>
           )}
           {success && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="mb-4 p-3 bg-orange-100 border border-orange-400 text-orange-700 rounded">
               {success}
             </div>
           )}

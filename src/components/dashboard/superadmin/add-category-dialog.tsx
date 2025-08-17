@@ -53,7 +53,7 @@ export default function AddCategoryDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
@@ -93,7 +93,7 @@ export default function AddCategoryDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
               {isSubmitting ? "Creating..." : "Create Category"}
             </Button>
           </DialogFooter>
