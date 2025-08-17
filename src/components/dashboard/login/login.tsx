@@ -262,7 +262,7 @@ export function Login() {
             {/* Footer */}
             <div className="text-center mt-8">
               <p className="text-sm text-gray-500 font-medium">
-                © 2024 Govinda Suite. All rights reserved.
+                © 2025 Govinda Suite. All rights reserved.
               </p>
             </div>
             
