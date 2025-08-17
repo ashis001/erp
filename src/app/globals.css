@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 204 10% 96%; /* hsl(204, 10%, 96%) - light gray */
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 181 40% 45%; /* hsl(181, 40%, 45%) - muted teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 91%;
+    --secondary-foreground: 220 14.3% 34.3%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 88 30% 50%; /* hsl(88, 30%, 50%) - soft olive green */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 85%;
+    --input: 220 13% 85%;
+    --ring: 181 40% 45%;
+    --chart-1: 181 40% 45%;
+    --chart-2: 88 30% 50%;
+    --chart-3: 25 95% 53%;
+    --chart-4: 38 90% 50%;
+    --chart-5: 350 85% 60%;
+    --radius: 0.5rem;
+    --sidebar-background: transparent;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 181 40% 45%;
+    --sidebar-accent: 181 40% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 181 40% 50%;
+    --sidebar-ring: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 181 40% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 88 30% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 181 40% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+  }
+  .bg-sidebar {
+    background-color: hsl(var(--sidebar-background));
+  }
+}
+
+@layer utilities {
+    .bg-gradient-to-b.from-primary.to-accent {
+        background-image: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--accent)));
+    }
+}
