@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,15 +25,35 @@ interface AssignStockDialogProps {
 
 export default function AssignStockDialog({ isOpen, onClose, item, admins }: AssignStockDialogProps) {
   const { toast } = useToast();
+  const [selectedAdminRole, setSelectedAdminRole] = useState<string>('');
+
+  // Group admins by role
+  const adminsByRole = useMemo(() => {
+    return admins.reduce((acc, admin) => {
+      if (!acc[admin.role]) {
+        acc[admin.role] = [];
+      }
+      acc[admin.role].push(admin);
+      return acc;
+    }, {} as Record<string, User[]>);
+  }, [admins]);
+
+  // Get available admin roles
+  const adminRoles = Object.keys(adminsByRole);
+
+  // Get admins for selected role
+  const availableAdmins = selectedAdminRole ? adminsByRole[selectedAdminRole] || [] : [];
 
   const formSchema = z.object({
-    adminId: z.string().min(1, 'Admin is required'),
+    adminRole: z.string().min(1, 'Admin role is required'),
+    adminId: z.string().min(1, 'Specific admin is required'),
     quantity: z.coerce.number().int().min(1, 'Quantity must be at least 1').max(item.globalAvailable, `Cannot assign more than available stock (${item.globalAvailable})`),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      adminRole: '',
       adminId: '',
       quantity: 1,
     },
@@ -74,16 +94,52 @@ export default function AssignStockDialog({ isOpen, onClose, item, admins }: Ass
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
+              name="adminRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Admin Role</FormLabel>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    setSelectedAdminRole(value);
+                    form.setValue('adminId', ''); // Reset admin selection when role changes
+                  }} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Select admin role" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {adminRoles.map(role => (
+                        <SelectItem key={role} value={role}>
+                          {role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="adminId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Admin</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Specific Admin</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    disabled={!selectedAdminRole}
+                  >
                     <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Select an admin" /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedAdminRole ? "Select specific admin" : "Select admin role first"} />
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {admins.map(admin => <SelectItem key={admin.id} value={admin.id.toString()}>{admin.name}</SelectItem>)}
+                      {availableAdmins.map(admin => (
+                        <SelectItem key={admin.id} value={admin.id.toString()}>
+                          {admin.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
