@@ -73,8 +73,8 @@ export default function InventoryTable({ data, categories, items, admins, onData
 
   return (
     <div className="flex flex-col h-full relative z-0">
-      <div className="pb-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="pb-4 sticky top-0 bg-white z-10 border-b">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Global Inventory</h1>
               <p className="text-muted-foreground">Manage your entire stock from one place.</p>
@@ -125,7 +125,7 @@ export default function InventoryTable({ data, categories, items, admins, onData
                 <div className="text-right">Actions</div>
               </div>
             </div>
-            <div className="overflow-y-auto bg-white" style={{ height: 'calc(100vh - 350px)' }}>
+            <div className="overflow-y-auto bg-white" style={{ height: 'calc(100vh - 250px)' }}>
             <div className="divide-y divide-gray-200">
                 {filteredData.length > 0 ? filteredData.map(item => (
                   <div key={item.itemId} className="grid grid-cols-9 gap-4 px-4 py-3 text-sm hover:bg-gray-50 bg-white">
@@ -140,18 +140,37 @@ export default function InventoryTable({ data, categories, items, admins, onData
                     <div className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-orange-100 hover:text-orange-600">
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setAssigningItem(item)} disabled={item.globalAvailable <= 0}>
+                          <DropdownMenuItem 
+                            onClick={() => setAssigningItem(item)} 
+                            disabled={item.globalAvailable <= 0}
+                            className="hover:bg-orange-500 hover:text-black focus:bg-orange-500 focus:text-black"
+                          >
                             Assign to Admin
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setUpdatingItem(item)}>Update Pricing</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setAdjustingItem(item)}>Adjust Quantity</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item)}>Delete</DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setUpdatingItem(item)}
+                            className="hover:bg-orange-500 hover:text-black focus:bg-orange-500 focus:text-black"
+                          >
+                            Update Pricing
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setAdjustingItem(item)}
+                            className="hover:bg-orange-500 hover:text-black focus:bg-orange-500 focus:text-black"
+                          >
+                            Adjust Quantity
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive hover:bg-red-100 hover:text-red-600 focus:bg-red-100 focus:text-red-600" 
+                            onClick={() => handleDelete(item)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

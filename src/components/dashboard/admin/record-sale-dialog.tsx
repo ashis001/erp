@@ -68,6 +68,8 @@ export default function RecordSaleDialog({ isOpen, onClose, item, adminId }: Rec
       });
       form.reset();
       onClose();
+      // Refresh the page to show updated data
+      window.location.reload();
     }
   };
 
