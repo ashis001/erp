@@ -95,23 +95,20 @@ export default function InventoryPage() {
   });
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col h-full overflow-hidden relative">
       <Header currentUser={currentUser} pathname={pathname} />
-      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="flex-1 p-4 md:p-6 overflow-hidden relative z-10">
         {currentUser.role === 'superadmin' ? (
           <InventoryTable 
             data={data.inventoryData} 
             categories={data.categories}
             items={data.items}
             admins={admins}
-            onDataChange={fetchData}
           />
         ) : (
           <MyStockTable stockData={stockData} adminId={currentUser.id} />
         )}
-      </main>
+      </div>
     </div>
   );
 }
-
-    

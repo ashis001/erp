@@ -9,27 +9,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
-import { createCategory } from "@/lib/actions";
+import { updateCategory } from "@/lib/actions";
 import { toast } from "@/hooks/use-toast";
+import type { Category } from "@/lib/types";
 
-export default function AddCategoryDialog() {
-  const [open, setOpen] = useState(false);
+interface EditCategoryDialogProps {
+  category: Category;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function EditCategoryDialog({ category, isOpen, onClose }: EditCategoryDialogProps) {
+  const [name, setName] = useState(category.name);
+  const [description, setDescription] = useState(category.description || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    
-    // Add a small delay to show the loading animation
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     try {
-      const result = await createCategory(formData);
+      const result = await updateCategory(category.id, name, description);
       if (result.error) {
         toast({
           title: "Error",
@@ -39,45 +43,38 @@ export default function AddCategoryDialog() {
       } else {
         toast({
           title: "Success",
-          description: "Category created successfully.",
+          description: "Category updated successfully.",
         });
-        // Wait a bit more to show the success state
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setOpen(false);
-        // Auto-refresh the page to show the new category
+        onClose();
         window.location.reload();
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create category.",
+        description: "Failed to update category.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
+
+  const handleClose = () => {
+    setName(category.name);
+    setDescription(category.description || "");
+    onClose();
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Category
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>Edit Category</DialogTitle>
           <DialogDescription>
-            Create a new product category for your inventory system.
+            Update the category name and description.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          await handleSubmit(formData);
-        }}>
+        <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
@@ -85,8 +82,8 @@ export default function AddCategoryDialog() {
               </Label>
               <Input
                 id="name"
-                name="name"
-                placeholder="e.g., Books, Japa Mala"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="col-span-3"
                 required
               />
@@ -97,7 +94,8 @@ export default function AddCategoryDialog() {
               </Label>
               <Textarea
                 id="description"
-                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description of the category"
                 className="col-span-3"
                 rows={3}
@@ -105,14 +103,21 @@ export default function AddCategoryDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white disabled:opacity-50">
+            <Button type="button" variant="ghost" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white disabled:opacity-50"
+            >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
+                  Updating...
                 </div>
               ) : (
-                "Create Category"
+                "Update Category"
               )}
             </Button>
           </DialogFooter>

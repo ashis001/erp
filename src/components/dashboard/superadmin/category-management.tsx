@@ -9,6 +9,7 @@ import { deleteCategory } from "@/lib/actions";
 import { toast } from "@/hooks/use-toast";
 import type { Category, Item } from "@/lib/types";
 import AddCategoryDialog from "./add-category-dialog";
+import EditCategoryDialog from "./edit-category-dialog";
 
 interface CategoryManagementProps {
   categories: Category[];
@@ -17,6 +18,7 @@ interface CategoryManagementProps {
 
 export default function CategoryManagement({ categories, items }: CategoryManagementProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   async function handleDelete(categoryId: number) {
     setDeletingId(categoryId);
@@ -33,6 +35,8 @@ export default function CategoryManagement({ categories, items }: CategoryManage
           title: "Success",
           description: "Category deleted successfully.",
         });
+        // Auto-refresh the page to show updated categories
+        window.location.reload();
       }
     } catch (error) {
       toast({
@@ -89,6 +93,14 @@ export default function CategoryManagement({ categories, items }: CategoryManage
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingCategory(category)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(category.id)}
@@ -104,6 +116,14 @@ export default function CategoryManagement({ categories, items }: CategoryManage
           )}
         </div>
       </CardContent>
+      
+      {editingCategory && (
+        <EditCategoryDialog
+          category={editingCategory}
+          isOpen={!!editingCategory}
+          onClose={() => setEditingCategory(null)}
+        />
+      )}
     </Card>
   );
 }

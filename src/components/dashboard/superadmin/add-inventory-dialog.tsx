@@ -44,12 +44,27 @@ export default function AddInventoryDialog({ isOpen, onClose, categories, items 
     },
   });
 
+
   const selectedCategoryId = useWatch({ control: form.control, name: 'categoryId' });
+  const selectedItemId = useWatch({ control: form.control, name: 'itemId' });
 
   const filteredItems = useMemo(() => {
     if (!selectedCategoryId) return [];
     return items.filter(item => item.category_id === parseInt(selectedCategoryId, 10));
   }, [selectedCategoryId, items]);
+
+  // Auto-populate cost price when item is selected
+  const selectedItem = useMemo(() => {
+    if (!selectedItemId) return null;
+    return items.find(item => item.id === parseInt(selectedItemId, 10));
+  }, [selectedItemId, items]);
+
+  // Update cost price when item changes
+  React.useEffect(() => {
+    if (selectedItem && selectedItem.default_selling_price) {
+      form.setValue('costPrice', selectedItem.default_selling_price);
+    }
+  }, [selectedItem, form]);
 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -73,17 +88,22 @@ export default function AddInventoryDialog({ isOpen, onClose, categories, items 
       });
       form.reset();
       onClose();
+      // Auto-refresh the page to show the new inventory
+      window.location.reload();
     }
   };
   
   const handleClose = () => {
     form.reset();
+    // Force reset the submitting state
+    form.clearErrors();
     onClose();
   }
 
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] z-50">
         <DialogHeader>
           <DialogTitle>Add Inventory Lot</DialogTitle>
           <DialogDescription>
@@ -168,8 +188,15 @@ export default function AddInventoryDialog({ isOpen, onClose, categories, items 
             
             <DialogFooter>
                 <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
-                <Button type="submit" disabled={form.formState.isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
-                    {form.formState.isSubmitting ? "Adding..." : "Add to Inventory"}
+                <Button type="submit" disabled={form.formState.isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white disabled:opacity-50">
+                    {form.formState.isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Adding...
+                      </div>
+                    ) : (
+                      "Add to Inventory"
+                    )}
                 </Button>
             </DialogFooter>
           </form>

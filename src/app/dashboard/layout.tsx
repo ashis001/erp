@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons';
@@ -17,6 +17,7 @@ export default function DashboardLayout({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -85,72 +86,80 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="relative min-h-svh">
-        <Sidebar>
-            <SidebarHeader>
-                <div className="flex items-center gap-2">
-                    <Logo className="h-8 w-8 text-sidebar-primary" />
-                    <span className="text-lg font-semibold">Govinda Mart</span>
-                </div>
+        <Sidebar className="bg-slate-800 border-none">
+            <SidebarHeader className="p-4 border-b border-slate-700">
+                {user && (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold text-sm">
+                                {user.name?.charAt(0).toUpperCase() || 'A'}
+                            </span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-white font-medium">{user.name || 'Admin'}</span>
+                            <span className="text-green-400 text-xs">● Online</span>
+                        </div>
+                    </div>
+                )}
             </SidebarHeader>
-            <SidebarContent>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <Link href="/dashboard">
-                                <LayoutDashboard />
-                                Dashboard
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                         <SidebarMenuButton asChild>
-                            <Link href="/dashboard/inventory">
-                                <Package />
-                                Inventory
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {user && user.role === 'superadmin' && (
-                      <>
+            <SidebarContent className="p-4">
+                <div className="mb-4">
+                    <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">GENERAL</h3>
+                    <SidebarMenu className="space-y-1">
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href="/dashboard/inventory/categories">
-                                    <FolderOpen />
-                                    Categories
+                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard' ? 'bg-slate-700' : ''}`}>
+                                <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    Dashboard
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href="/dashboard/inventory/items">
-                                    <Tag />
-                                    Items
+                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory' ? 'bg-slate-700' : ''}`}>
+                                <Link href="/dashboard/inventory" className="flex items-center gap-3 px-3 py-2">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    Inventory
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                      </>
-                    )}
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <Link href="/dashboard/sales">
-                                <BarChart />
-                                Sales
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {user && user.role === 'superadmin' && (
-                      <>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href="/dashboard/users">
-                                    <Users />
-                                    Users
+                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/sales' ? 'bg-slate-700' : ''}`}>
+                                <Link href="/dashboard/sales" className="flex items-center gap-3 px-3 py-2">
+                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                    Sales
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                      </>
-                    )}
-                </SidebarMenu>
+                        {user && user.role === 'superadmin' && (
+                            <>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/categories' ? 'bg-slate-700' : ''}`}>
+                                        <Link href="/dashboard/inventory/categories" className="flex items-center gap-3 px-3 py-2">
+                                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                            Categories
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/items' ? 'bg-slate-700' : ''}`}>
+                                        <Link href="/dashboard/inventory/items" className="flex items-center gap-3 px-3 py-2">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                            Items
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/users' ? 'bg-slate-700' : ''}`}>
+                                        <Link href="/dashboard/users" className="flex items-center gap-3 px-3 py-2">
+                                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                            Users
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </>
+                        )}
+                    </SidebarMenu>
+                </div>
             </SidebarContent>
             <SidebarFooter>
                 <div className="p-2">

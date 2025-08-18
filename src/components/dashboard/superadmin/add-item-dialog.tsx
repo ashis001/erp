@@ -36,6 +36,17 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
   const [itemName, setItemName] = useState<string>("");
   const [autoSku, setAutoSku] = useState<string>("");
 
+  // Reset form state when dialog closes
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setIsSubmitting(false);
+      setSelectedCategory("");
+      setItemName("");
+      setAutoSku("");
+    }
+  };
+
   // Generate SKU automatically based on category and item name
   useEffect(() => {
     if (selectedCategory && itemName) {
@@ -75,6 +86,9 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
     }
     setIsSubmitting(true);
     
+    // Add a small delay to show the loading animation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     try {
       const result = await createItem(formData);
       if (result.error) {
@@ -88,10 +102,14 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
           title: "Success",
           description: "Item created successfully.",
         });
+        // Wait a bit more to show the success state
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setOpen(false);
         setSelectedCategory("");
         setItemName("");
         setAutoSku("");
+        // Auto-refresh the page to show the new item
+        window.location.reload();
       }
     } catch (error) {
       toast({
@@ -104,10 +122,20 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
     }
   }
 
+  // Debug logging
+  console.log('AddItemDialog render:', {
+    categoriesLength: categories.length,
+    isSubmitting,
+    open
+  });
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
+        <Button 
+          className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white"
+          onClick={() => console.log('Add Item button clicked')}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Item
         </Button>
@@ -119,7 +147,11 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
             Create a new product item in your inventory system.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          await handleSubmit(formData);
+        }}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="category" className="text-right">
@@ -127,7 +159,7 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
               </Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -168,7 +200,7 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="defaultSellingPrice" className="text-right">
-                Default Price
+                Price
               </Label>
               <Input
                 id="defaultSellingPrice"
@@ -183,8 +215,15 @@ export default function AddItemDialog({ categories }: AddItemDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white">
-              {isSubmitting ? "Creating..." : "Create Item"}
+            <Button type="submit" disabled={isSubmitting} className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white disabled:opacity-50">
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating...
+                </div>
+              ) : (
+                "Create Item"
+              )}
             </Button>
           </DialogFooter>
         </form>

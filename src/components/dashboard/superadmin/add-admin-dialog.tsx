@@ -57,6 +57,8 @@ export default function AddAdminDialog({ isOpen, onClose }: AddAdminDialogProps)
       });
       form.reset();
       onClose();
+      // Refresh the page to show the new user
+      window.location.reload();
     }
   };
   

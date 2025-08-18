@@ -827,38 +827,70 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function deleteCategory(categoryId: number) {
-    let connection;
-    try {
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        // Check if category has any items
-        const [items] = await connection.query(
-            'SELECT COUNT(*) as count FROM items WHERE category_id = ?',
-            [categoryId]
-        );
-
-        if ((items as any)[0].count > 0) {
-            return { error: "Cannot delete category with existing items." };
-        }
-
-        await connection.query('DELETE FROM categories WHERE id = ?', [categoryId]);
-
-        const superadminId = 1;
-        await logAction(superadminId, 'DELETE', 'Category', categoryId, connection);
-        await connection.commit();
-
-        revalidatePath("/dashboard");
-        revalidatePath("/dashboard/inventory");
-        return { success: "Category deleted successfully." };
-    } catch (error) {
-        console.error("Category deletion error:", error);
-        if (connection) await connection.rollback();
-        const errorMessage = error instanceof Error ? error.message : 'Error: Failed to delete category.';
-        return { error: errorMessage };
-    } finally {
-        if (connection) connection.release();
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    // Check if category has items
+    const [itemsResult] = await connection.query(
+      'SELECT COUNT(*) as count FROM items WHERE category_id = ?',
+      [categoryId]
+    );
+    
+    if (parseInt((itemsResult as any)[0].count) > 0) {
+      return { error: "Cannot delete category with existing items. Please delete all items in this category first." };
     }
+    
+    await connection.query('DELETE FROM categories WHERE id = ?', [categoryId]);
+    
+    revalidatePath('/dashboard/superadmin');
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return { error: "Failed to delete category." };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+export async function updateCategory(categoryId: number, name: string, description?: string) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    await connection.query(
+      'UPDATE categories SET name = ?, description = ? WHERE id = ?',
+      [name, description || null, categoryId]
+    );
+    
+    revalidatePath('/dashboard/superadmin');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return { error: "Failed to update category." };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+export async function updateItem(itemId: number, name: string) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    await connection.query(
+      'UPDATE items SET name = ? WHERE id = ?',
+      [name, itemId]
+    );
+    
+    revalidatePath('/dashboard/superadmin');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating item:', error);
+    return { error: "Failed to update item." };
+  } finally {
+    if (connection) connection.release();
+  }
 }
 
 // Item Management Actions

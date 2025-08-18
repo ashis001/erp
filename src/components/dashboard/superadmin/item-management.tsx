@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import { deleteItem } from "@/lib/actions";
 import { toast } from "@/hooks/use-toast";
 import type { Category, Item, InventoryLot } from "@/lib/types";
 import AddItemDialog from "./add-item-dialog";
+import EditItemDialog from "./edit-item-dialog";
 
 interface ItemManagementProps {
   categories: Category[];
@@ -18,6 +19,7 @@ interface ItemManagementProps {
 
 export default function ItemManagement({ categories, items, inventoryLots }: ItemManagementProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   async function handleDelete(itemId: number) {
     setDeletingId(itemId);
@@ -34,6 +36,8 @@ export default function ItemManagement({ categories, items, inventoryLots }: Ite
           title: "Success",
           description: "Item deleted successfully.",
         });
+        // Auto-refresh the page to show updated items
+        window.location.reload();
       }
     } catch (error) {
       toast({
@@ -100,6 +104,14 @@ export default function ItemManagement({ categories, items, inventoryLots }: Ite
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingItem(item)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(item.id)}
@@ -115,6 +127,14 @@ export default function ItemManagement({ categories, items, inventoryLots }: Ite
           )}
         </div>
       </CardContent>
+      
+      {editingItem && (
+        <EditItemDialog
+          item={editingItem}
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
     </Card>
   );
 }
