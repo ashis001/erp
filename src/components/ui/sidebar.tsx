@@ -199,7 +199,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-card p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-slate-800 text-white p-0 [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -218,7 +218,7 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "group peer hidden md:fixed md:top-0 md:flex flex-col h-svh bg-gradient-to-r from-orange-400 to-orange-600 text-white transition-[width] duration-200 ease-linear z-50 border-r",
+          "group peer hidden md:fixed md:top-0 md:flex flex-col h-svh bg-slate-800 text-white transition-[width] duration-200 ease-linear z-50 border-r",
            state === "expanded" ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
            className
         )}
@@ -498,7 +498,7 @@ const sidebarMenuButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "hover:bg-gradient-to-r hover:from-orange-400/80 hover:via-orange-300/40 hover:to-transparent hover:text-white text-foreground transition-all duration-300",
+        default: "hover:bg-slate-700 hover:text-white",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--border))] hover:bg-white hover:text-black hover:shadow-[0_0_0_1px_hsl(var(--accent))]",
       },
@@ -704,7 +704,7 @@ const SidebarMenuSubButton = React.forwardRef<
       data-size={size}
       data-active={isActive}
       className={cn(
-        "flex w-full items-center rounded-md p-2 text-left text-sm transition-all duration-300 hover:bg-gradient-to-r hover:from-orange-400/80 hover:via-orange-300/40 hover:to-transparent hover:text-white focus-visible:bg-accent focus-visible:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-accent-foreground",
+        "flex w-full items-center rounded-md p-2 text-left text-sm hover:bg-slate-700 hover:text-white focus-visible:bg-accent focus-visible:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-accent-foreground",
         "data-[active=true]:bg-accent data-[active=true]:text-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",

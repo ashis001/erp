@@ -31,7 +31,12 @@ export function Login() {
       setError(result.error);
     } else if (result.success && result.user) {
       localStorage.setItem('currentUser', result.user.id.toString());
-      router.push('/dashboard');
+      // Redirect based on user role
+      if (result.user.role === 'superadmin') {
+        router.push('/dashboard');
+      } else {
+        router.push('/dashboard/inventory');
+      }
     }
   };
 

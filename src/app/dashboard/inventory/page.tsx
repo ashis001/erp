@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/dashboard/header';
 import InventoryTable from '@/components/dashboard/superadmin/inventory-table';
 import MyStockTable from '@/components/dashboard/admin/my-stock-table';
+import MobileInventory from '@/components/dashboard/admin/mobile-inventory';
 import type { User, Category, Item, Assignment, Sale } from '@/lib/types';
 import { usePathname } from 'next/navigation';
 import { getInventoryPageData } from '@/lib/actions';
@@ -106,7 +107,7 @@ export default function InventoryPage() {
             admins={admins}
           />
         ) : (
-          <MyStockTable stockData={stockData} adminId={currentUser.id} />
+          <MobileInventory stockData={stockData} adminId={currentUser.id} />
         )}
       </div>
     </div>
