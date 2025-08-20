@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
-import type { User, Item, Assignment, Sale, Category } from '@/lib/types';
+import type { User, Item, Assignment, Sale, Category, CreditSale } from '@/lib/types';
 import StatCard from '../stat-card';
 import { Package, CheckCircle, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +13,7 @@ interface AdminDashboardProps {
   assignments: Assignment[];
   sales: Sale[];
   categories: Category[];
+  creditSales: CreditSale[];
 }
 
 const getCategoryForRole = (role: User['role']): string | null => {
@@ -23,17 +23,26 @@ const getCategoryForRole = (role: User['role']): string | null => {
     return null;
 }
 
-export default function AdminDashboard({ user, items, assignments, sales, categories }: AdminDashboardProps) {
+export default function AdminDashboard({ user, items, assignments, sales, categories, creditSales }: AdminDashboardProps) {
   const [salesPeriod, setSalesPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   const userCategoryName = getCategoryForRole(user.role);
   const userCategory = categories.find(c => c.name === userCategoryName);
 
   const adminAssignments = assignments.filter(a => a.admin_user_id === user.id);
   const adminSales = sales.filter(s => s.admin_user_id === user.id);
+  const adminCreditSales = creditSales.filter(cs => cs.admin_id === user.id);
 
   const totalAssigned = adminAssignments.reduce((acc, a) => acc + a.qty_assigned, 0);
   const totalSold = adminSales.reduce((acc, s) => acc + s.qty_sold, 0);
   const availableStock = totalAssigned - totalSold;
+
+  // Revenue breakdown for this admin
+  const totalSalesValue = adminSales.reduce((sum, sale) => sum + parseFloat(sale.total_price as any), 0);
+  const pendingCredit = adminCreditSales
+    .filter(cs => cs.status === 'active')
+    .reduce((sum, cs) => sum + Number(cs.pending_balance || 0), 0);
+  // Cash = total sales value minus active pending balances
+  const cashRevenue = totalSalesValue - pendingCredit;
 
   // Sales data aggregation by time periods
   const salesAnalytics = useMemo(() => {
@@ -164,6 +173,8 @@ export default function AdminDashboard({ user, items, assignments, sales, catego
         <StatCard title="My Assigned Stock" value={totalAssigned} icon={<Package />} description={`Total ${userCategoryName} items assigned`} />
         <StatCard title="My Available Stock" value={availableStock} icon={<CheckCircle />} description="Items available to be sold" />
         <StatCard title="My Total Sold" value={totalSold} icon={<TrendingUp />} description={`Total ${userCategoryName} items you have sold`} />
+        <StatCard title="My Cash Revenue" value={`₹${cashRevenue.toFixed(2)}`} icon={<TrendingUp />} description="Cash received (cash sales - active pending credits)" />
+        <StatCard title="My Pending Credit" value={`₹${pendingCredit.toFixed(2)}`} icon={<Package />} description="Outstanding balances on your credits" />
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">

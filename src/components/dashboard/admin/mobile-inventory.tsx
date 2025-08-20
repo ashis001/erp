@@ -123,19 +123,17 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
                     )}
                   </Button>
                   
-                  <Button 
+                  <button
                     onClick={() => {
                       setSelectedItem(item);
                       setCreditDialogOpen(true);
                     }}
                     disabled={item.available <= 0}
-                    variant="outline"
-                    className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                    size="lg"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md border border-orange-500 text-orange-600 bg-transparent hover:bg-transparent hover:text-orange-600 hover:border-orange-500 focus:bg-transparent focus:text-orange-600 focus:border-orange-500 active:bg-transparent active:text-orange-600 active:border-orange-500 hover:opacity-100 focus:opacity-100 active:opacity-100 disabled:opacity-100 disabled:text-orange-400 disabled:border-orange-300 disabled:cursor-not-allowed focus:outline-none focus:ring-0 transition-none"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
                     Credit
-                  </Button>
+                  </button>
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/dashboard/header';
@@ -6,7 +5,7 @@ import SalesTable from '@/components/dashboard/sales/sales-table';
 import type { User } from '@/lib/types';
 import { usePathname } from 'next/navigation';
 import StatCard from '@/components/dashboard/stat-card';
-import { Wallet, Package, Loader2 } from 'lucide-react';
+import { Wallet, Package, Loader2, TrendingUp } from 'lucide-react';
 import SalesCharts from '@/components/dashboard/sales/sales-charts';
 import { format, subMonths } from 'date-fns';
 import { getSalesPageData, getUsers } from '@/lib/actions';
@@ -15,6 +14,7 @@ export default function SalesPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [salesData, setSalesData] = useState<any[]>([]);
+  const [creditSales, setCreditSales] = useState<any[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
@@ -45,6 +45,7 @@ export default function SalesPage() {
       getSalesPageData(currentUser.id).then(result => {
         if (result.data) {
             setSalesData(result.data.salesData);
+            setCreditSales(result.data.creditSales || []);
             if(users.length === 0) setUsers(result.data.users);
         }
       }).finally(() => setIsLoading(false));
@@ -60,9 +61,13 @@ export default function SalesPage() {
     }
   };
   
-  const totalRevenue = useMemo(() => {
-    return salesData.reduce((acc, sale) => acc + parseFloat(sale.total_price), 0);
-  }, [salesData]);
+  const totalSalesValue = useMemo(() => salesData.reduce((acc, sale) => acc + parseFloat(sale.total_price), 0), [salesData]);
+  const totalCreditValue = useMemo(() => creditSales.reduce((sum, cs) => sum + Number(cs.total_price || 0), 0), [creditSales]);
+  const totalCreditDown = useMemo(() => creditSales.reduce((sum, cs) => sum + Number(cs.down_payment || 0), 0), [creditSales]);
+  const pendingCredit = useMemo(() => creditSales
+    .filter((cs) => cs.status === 'active')
+    .reduce((sum, cs) => sum + Number(cs.pending_balance || 0), 0), [creditSales]);
+  const cashRevenue = useMemo(() => totalSalesValue - totalCreditValue + totalCreditDown, [totalSalesValue, totalCreditValue, totalCreditDown]);
 
   const totalItemsSold = useMemo(() => {
       return salesData.reduce((acc, sale) => acc + sale.qty_sold, 0);
@@ -130,10 +135,16 @@ export default function SalesPage() {
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
             <StatCard 
-                title="Total Revenue"
-                value={`₹${totalRevenue.toFixed(2)}`}
+                title="Cash Revenue"
+                value={`₹${cashRevenue.toFixed(2)}`}
                 icon={<Wallet />}
-                description="Total revenue from all sales."
+                description="Cash received (cash sales + credit down payments)."
+            />
+            <StatCard 
+                title="Pending Credit"
+                value={`₹${pendingCredit.toFixed(2)}`}
+                icon={<TrendingUp />}
+                description="Outstanding balances on active credits."
             />
             <StatCard 
                 title="Total Items Sold"
@@ -156,5 +167,3 @@ export default function SalesPage() {
     </div>
   );
 }
-
-    

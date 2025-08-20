@@ -128,6 +128,7 @@ export default function DashboardPage() {
                     inventoryLots={data.inventoryLots}
                     assignments={data.assignments}
                     sales={data.sales}
+                    creditSales={data.creditSales}
                 />
             ) : (
                 <AdminDashboard
@@ -136,6 +137,7 @@ export default function DashboardPage() {
                     items={data.items}
                     assignments={data.assignments}
                     sales={data.sales}
+                    creditSales={data.creditSales}
                 />
             )}
         </main>

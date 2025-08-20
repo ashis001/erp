@@ -1,4 +1,3 @@
-
 export type UserRole = 'superadmin' | 'book_admin' | 'counter_admin' | 'japa_admin';
 
 export interface User {
@@ -54,6 +53,26 @@ export interface Sale {
   customer_address?: string | null;
   customer_phone?: string | null;
   created_at: string;
+}
+
+export interface CreditSale {
+  id: number;
+  item_id: number;
+  admin_id: number;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  total_price: number;
+  down_payment: number;
+  payment_type: 'emi' | 'pay_later';
+  emi_periods: number | null;
+  monthly_emi: number;
+  pay_later_date?: string | null;
+  pending_balance: number;
+  status: 'active' | 'completed' | 'defaulted';
+  created_at: string;
+  item_name?: string;
+  admin_name?: string;
 }
 
 export interface AuditLog {

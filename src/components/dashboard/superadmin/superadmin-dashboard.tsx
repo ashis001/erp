@@ -1,8 +1,7 @@
-
 import React from 'react';
 import StatCard from '../stat-card';
 import { Package, Send, Wallet, Users, TrendingUp, ShoppingCart } from 'lucide-react';
-import type { User, Category, Item, InventoryLot, Assignment, Sale } from '@/lib/types';
+import type { User, Category, Item, InventoryLot, Assignment, Sale, CreditSale } from '@/lib/types';
 import SalesCharts from '../sales/sales-charts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -17,15 +16,23 @@ interface SuperadminDashboardProps {
   inventoryLots: InventoryLot[];
   assignments: Assignment[];
   sales: Sale[];
+  creditSales: CreditSale[];
 }
 
-export default function SuperadminDashboard({ users, categories, items, inventoryLots, assignments, sales }: SuperadminDashboardProps) {
+export default function SuperadminDashboard({ users, categories, items, inventoryLots, assignments, sales, creditSales }: SuperadminDashboardProps) {
   // Calculate totals consistently
   const totalStock = inventoryLots.reduce((sum, lot) => sum + lot.qty_purchased, 0);
   const totalAssigned = assignments.reduce((sum, assignment) => sum + assignment.qty_assigned, 0);
   const totalSold = sales.reduce((sum, sale) => sum + sale.qty_sold, 0);
   const totalSalesValue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_price as any), 0);
-  
+
+  // Revenue breakdown
+  const pendingCredit = creditSales
+    .filter(cs => cs.status === 'active')
+    .reduce((sum, cs) => sum + Number(cs.pending_balance || 0), 0);
+  // Cash = total sales value minus active pending balances
+  const cashRevenue = totalSalesValue - pendingCredit;
+
   // Calculate available stock (ensure it's not negative)
   const globalAvailable = Math.max(0, totalAssigned - totalSold);
   const unassignedStock = Math.max(0, totalStock - totalAssigned);
@@ -183,7 +190,8 @@ export default function SuperadminDashboard({ users, categories, items, inventor
         <StatCard title="Stock Assigned to Admins" value={totalAssigned} icon={<Send />} description="Stock distributed to admins" />
         <StatCard title="Available with Admins" value={globalAvailable} icon={<Package />} description={oversoldItems > 0 ? `${oversoldItems} oversold items detected` : "Assigned but not yet sold"} />
         <StatCard title="Items Sold" value={totalSold} icon={<ShoppingCart />} description="Total units sold" />
-        <StatCard title="Total Sales Value" value={`₹${totalSalesValue.toFixed(2)}`} icon={<Wallet />} description="Total revenue generated" />
+        <StatCard title="Cash Revenue" value={`₹${cashRevenue.toFixed(2)}`} icon={<Wallet />} description="Cash received (cash sales - active pending credits)" />
+        <StatCard title="Pending Credit" value={`₹${pendingCredit.toFixed(2)}`} icon={<TrendingUp />} description="Outstanding balances on active credits" />
         <StatCard title="Unassigned Stock" value={unassignedStock} icon={<TrendingUp />} description="Stock in global inventory" />
       </div>
 

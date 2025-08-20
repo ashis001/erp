@@ -105,60 +105,112 @@ export default function DashboardLayout({
             <SidebarContent className="p-4">
                 <div className="mb-4">
                     <h3 className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">GENERAL</h3>
-                    <SidebarMenu className="space-y-1">
+                    {user && user.role === 'superadmin' ? (
+                      <SidebarMenu className="space-y-1">
+                        {/* Dashboard */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard' ? 'bg-slate-700' : ''}`}>
-                                <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2">
-                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                    Dashboard
-                                </Link>
-                            </SidebarMenuButton>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              Dashboard
+                            </Link>
+                          </SidebarMenuButton>
                         </SidebarMenuItem>
+                        {/* Sales */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory' ? 'bg-slate-700' : ''}`}>
-                                <Link href="/dashboard/inventory" className="flex items-center gap-3 px-3 py-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    Inventory
-                                </Link>
-                            </SidebarMenuButton>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/sales' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/sales" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              Sales
+                            </Link>
+                          </SidebarMenuButton>
                         </SidebarMenuItem>
+                        {/* Inventory */}
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/sales' ? 'bg-slate-700' : ''}`}>
-                                <Link href="/dashboard/sales" className="flex items-center gap-3 px-3 py-2">
-                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                    Sales
-                                </Link>
-                            </SidebarMenuButton>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/inventory" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              Inventory
+                            </Link>
+                          </SidebarMenuButton>
                         </SidebarMenuItem>
-                        {user && user.role === 'superadmin' && (
-                            <>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/categories' ? 'bg-slate-700' : ''}`}>
-                                        <Link href="/dashboard/inventory/categories" className="flex items-center gap-3 px-3 py-2">
-                                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                            Categories
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/items' ? 'bg-slate-700' : ''}`}>
-                                        <Link href="/dashboard/inventory/items" className="flex items-center gap-3 px-3 py-2">
-                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                            Items
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/users' ? 'bg-slate-700' : ''}`}>
-                                        <Link href="/dashboard/users" className="flex items-center gap-3 px-3 py-2">
-                                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                                            Users
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            </>
-                        )}
-                    </SidebarMenu>
+                        {/* Categories */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/categories' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/inventory/categories" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                              Categories
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Item (items route) */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory/items' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/inventory/items" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              Item
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Credit */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/credit' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/credit" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              Credit
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Users */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/users' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/users" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              Users
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    ) : (
+                      <SidebarMenu className="space-y-1">
+                        {/* Dashboard */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              Dashboard
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Inventory */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/inventory' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/inventory" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              Inventory
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Sales */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/sales' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/sales" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              Sales
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Credit */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/credit' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/credit" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              Credit
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    )}
                 </div>
             </SidebarContent>
             <SidebarFooter>
