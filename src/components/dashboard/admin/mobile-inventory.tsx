@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Package, IndianRupee } from 'lucide-react';
+import { ShoppingCart, Package, IndianRupee, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { recordSale } from '@/lib/actions';
+import CreditSaleDialog from './credit-sale-dialog';
 
 interface StockDataItem {
   itemId: number;
@@ -25,6 +26,8 @@ interface MobileInventoryProps {
 export default function MobileInventory({ stockData, adminId }: MobileInventoryProps) {
   const { toast } = useToast();
   const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set());
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<StockDataItem | null>(null);
 
   const handleQuickSale = async (item: StockDataItem) => {
     if (item.available <= 0) return;
@@ -104,20 +107,36 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
                   </div>
                 </div>
                 
-                <Button 
-                  onClick={() => handleQuickSale(item)}
-                  disabled={item.available <= 0 || loadingItems.has(item.itemId)}
-                  className="w-full bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white"
-                  size="lg"
-                >
-                  {loadingItems.has(item.itemId) ? (
-                    "Recording..."
-                  ) : item.available <= 0 ? (
-                    "Out of Stock"
-                  ) : (
-                    `Record Sale - ₹${item.sellingPrice}`
-                  )}
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={() => handleQuickSale(item)}
+                    disabled={item.available <= 0 || loadingItems.has(item.itemId)}
+                    className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white"
+                    size="lg"
+                  >
+                    {loadingItems.has(item.itemId) ? (
+                      "Recording..."
+                    ) : item.available <= 0 ? (
+                      "Out of Stock"
+                    ) : (
+                      <>Record Sale</>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setCreditDialogOpen(true);
+                    }}
+                    disabled={item.available <= 0}
+                    variant="outline"
+                    className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                    size="lg"
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Credit
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -133,6 +152,16 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
           </CardContent>
         </Card>
       )}
+      
+      <CreditSaleDialog 
+        isOpen={creditDialogOpen}
+        onClose={() => {
+          setCreditDialogOpen(false);
+          setSelectedItem(null);
+        }}
+        item={selectedItem}
+        adminId={adminId}
+      />
     </div>
   );
 }

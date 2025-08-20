@@ -470,6 +470,7 @@ export async function getAuditLogs() {
 const createUserSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
+    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     role: z.enum(['book_admin', 'counter_admin', 'japa_admin', 'superadmin']),
 });
@@ -485,7 +486,7 @@ export async function createUser(formData: FormData) {
         }
         
         const superadminId = 1; // This should be the current logged-in superadmin's ID
-        const { name, email, role, password } = validatedFields.data;
+        const { name, email, phone, role, password } = validatedFields.data;
 
         const allUsers = await dbGetUsers(); 
         const existingUser = allUsers.find(u => u.email === email);
@@ -499,6 +500,7 @@ export async function createUser(formData: FormData) {
         const newUser = await addUser({
             name,
             email,
+            phone,
             role,
             password: hashedPassword,
         });
@@ -991,5 +993,191 @@ export async function deleteItem(itemId: number) {
     } finally {
         if (connection) connection.release();
     }
+}
+
+// Credit Sale Schema
+const creditSaleSchema = z.object({
+  itemId: z.string(),
+  adminId: z.string(),
+  customerName: z.string().min(1, "Customer name is required"),
+  customerEmail: z.string().email(),
+  customerPhone: z.string().min(1, "Customer phone is required"),
+  totalPrice: z.string(),
+  downPayment: z.string(),
+  paymentType: z.enum(['emi', 'pay_later']),
+  emiPeriods: z.string(),
+  payLaterDate: z.string().optional(),
+  pendingBalance: z.string(),
+  monthlyEmi: z.string(),
+});
+
+export async function recordCreditSale(formData: FormData) {
+  let connection;
+  try {
+    const validatedFields = creditSaleSchema.safeParse(
+      Object.fromEntries(formData.entries())
+    );
+
+    if (!validatedFields.success) {
+      return { error: "Invalid form data." };
+    }
+
+    const {
+      itemId,
+      adminId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      totalPrice,
+      downPayment,
+      paymentType,
+      emiPeriods,
+      payLaterDate,
+      pendingBalance,
+      monthlyEmi,
+    } = validatedFields.data;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Check if admin has available stock
+    const [assignments] = await connection.query(
+      'SELECT qty_assigned FROM assignments WHERE admin_user_id = ? AND item_id = ?',
+      [parseInt(adminId), parseInt(itemId)]
+    );
+
+    if (!assignments || (assignments as any).length === 0 || (assignments as any)[0].qty_assigned <= 0) {
+      return { error: "No available stock for this item." };
+    }
+
+    // Create credit_sales table if it doesn't exist
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS credit_sales (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        item_id INT NOT NULL,
+        admin_id INT NOT NULL,
+        customer_name VARCHAR(255) NOT NULL,
+        customer_email VARCHAR(255) NOT NULL,
+        customer_phone VARCHAR(20) NOT NULL,
+        total_price DECIMAL(10, 2) NOT NULL,
+        down_payment DECIMAL(10, 2) NOT NULL,
+        payment_type ENUM('emi', 'pay_later') DEFAULT 'emi',
+        emi_periods INT NOT NULL,
+        pay_later_date DATE NULL,
+        pending_balance DECIMAL(10, 2) NOT NULL,
+        monthly_emi DECIMAL(10, 2) NOT NULL,
+        status ENUM('active', 'completed', 'defaulted') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (item_id) REFERENCES items(id),
+        FOREIGN KEY (admin_id) REFERENCES users(id)
+      )
+    `);
+
+    // Create credit_payments table if it doesn't exist
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS credit_payments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        credit_sale_id INT NOT NULL,
+        payment_number INT NOT NULL,
+        due_date DATE NOT NULL,
+        amount_due DECIMAL(10, 2) NOT NULL,
+        amount_paid DECIMAL(10, 2) DEFAULT 0,
+        payment_date TIMESTAMP NULL,
+        status ENUM('pending', 'paid', 'overdue') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (credit_sale_id) REFERENCES credit_sales(id)
+      )
+    `);
+
+    // Calculate pay later date if needed
+    let payLaterDateFormatted = null;
+    if (paymentType === 'pay_later' && payLaterDate) {
+      if (payLaterDate === 'tomorrow') {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        payLaterDateFormatted = tomorrow.toISOString().split('T')[0];
+      } else if (payLaterDate === '1_month') {
+        const oneMonth = new Date();
+        oneMonth.setMonth(oneMonth.getMonth() + 1);
+        payLaterDateFormatted = oneMonth.toISOString().split('T')[0];
+      } else if (payLaterDate.startsWith('20')) {
+        payLaterDateFormatted = payLaterDate;
+      }
+    }
+
+    // Insert credit sale record
+    const [creditResult] = await connection.query(
+      `INSERT INTO credit_sales (
+        item_id, admin_id, customer_name, customer_email, customer_phone, 
+        total_price, down_payment, payment_type, emi_periods, pay_later_date,
+        pending_balance, monthly_emi
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        parseInt(itemId),
+        parseInt(adminId),
+        customerName,
+        customerEmail,
+        customerPhone,
+        parseFloat(totalPrice),
+        parseFloat(downPayment),
+        paymentType,
+        parseInt(emiPeriods),
+        payLaterDateFormatted,
+        parseFloat(pendingBalance),
+        parseFloat(monthlyEmi),
+      ]
+    );
+
+    const creditSaleId = (creditResult as any).insertId;
+
+    // Generate payment schedule
+    if (paymentType === 'emi') {
+      // Generate EMI schedule
+      const currentDate = new Date();
+      for (let i = 1; i <= parseInt(emiPeriods); i++) {
+        const dueDate = new Date(currentDate);
+        dueDate.setMonth(dueDate.getMonth() + i);
+        
+        await connection.query(
+          `INSERT INTO credit_payments (
+            credit_sale_id, payment_number, due_date, amount_due
+          ) VALUES (?, ?, ?, ?)`,
+          [creditSaleId, i, dueDate.toISOString().split('T')[0], parseFloat(monthlyEmi)]
+        );
+      }
+    } else if (paymentType === 'pay_later' && payLaterDateFormatted) {
+      // Generate single payment for pay later
+      await connection.query(
+        `INSERT INTO credit_payments (
+          credit_sale_id, payment_number, due_date, amount_due
+        ) VALUES (?, ?, ?, ?)`,
+        [creditSaleId, 1, payLaterDateFormatted, parseFloat(monthlyEmi)]
+      );
+    }
+
+    // Reduce available stock
+    await connection.query(
+      'UPDATE assignments SET qty_assigned = qty_assigned - 1 WHERE admin_user_id = ? AND item_id = ?',
+      [parseInt(adminId), parseInt(itemId)]
+    );
+
+    // Log the action
+    const actionType = paymentType === 'emi' ? 'Credit Sale (EMI)' : 'Credit Sale (Pay Later)';
+    await logAction(parseInt(adminId), 'CREATE', actionType, creditSaleId, connection);
+
+    await connection.commit();
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/inventory");
+    return { success: `${paymentType === 'emi' ? 'EMI credit sale' : 'Pay later sale'} recorded successfully.` };
+
+  } catch (error) {
+    console.error("Credit sale error:", error);
+    if (connection) await connection.rollback();
+    const errorMessage = error instanceof Error ? error.message : 'Error: Failed to record credit sale.';
+    return { error: errorMessage };
+  } finally {
+    if (connection) connection.release();
+  }
 }
 

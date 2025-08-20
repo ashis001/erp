@@ -20,6 +20,7 @@ interface AddAdminDialogProps {
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   role: z.enum(['book_admin', 'counter_admin', 'japa_admin'], { required_error: 'Role is required' }),
 });
@@ -32,6 +33,7 @@ export default function AddAdminDialog({ isOpen, onClose }: AddAdminDialogProps)
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
       password: '',
     },
   });
@@ -96,6 +98,17 @@ export default function AddAdminDialog({ isOpen, onClose }: AddAdminDialogProps)
                 <FormItem>
                   <FormLabel>Email Address</FormLabel>
                   <FormControl><Input type="email" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl><Input type="tel" placeholder="Enter phone number" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}

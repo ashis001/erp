@@ -44,3 +44,43 @@ ON DUPLICATE KEY UPDATE name=VALUES(name), sku=VALUES(sku), default_selling_pric
 
 -- You can now log into the application. The default user switcher will show the "Super Admin" account.
 -- From there, you can add more admin users and manage inventory.
+-- Create credit_sales table
+CREATE TABLE IF NOT EXISTS credit_sales (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  item_id INT NOT NULL,
+  admin_id INT NOT NULL,
+  customer_name VARCHAR(255) NOT NULL,
+  customer_email VARCHAR(255) NOT NULL,
+  customer_phone VARCHAR(20) NOT NULL,
+  total_price DECIMAL(10, 2) NOT NULL,
+  down_payment DECIMAL(10, 2) NOT NULL,
+  payment_type ENUM('emi', 'pay_later') DEFAULT 'emi',
+  emi_periods INT NOT NULL,
+  pay_later_date DATE NULL,
+  pending_balance DECIMAL(10, 2) NOT NULL,
+  monthly_emi DECIMAL(10, 2) NOT NULL,
+  status ENUM('active', 'completed', 'defaulted') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (item_id) REFERENCES items(id),
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+
+-- Create credit_payments table
+CREATE TABLE IF NOT EXISTS credit_payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  credit_sale_id INT NOT NULL,
+  payment_number INT NOT NULL,
+  due_date DATE NOT NULL,
+  amount_due DECIMAL(10, 2) NOT NULL,
+  amount_paid DECIMAL(10, 2) DEFAULT 0,
+  payment_date TIMESTAMP NULL,
+  status ENUM('pending', 'paid', 'overdue') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (credit_sale_id) REFERENCES credit_sales(id)
+);
+
+-- Add phone number column to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) DEFAULT '99999999';
+
+-- Update existing users with default phone number
+UPDATE users SET phone = '99999999' WHERE phone IS NULL OR phone = '';

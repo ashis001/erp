@@ -71,8 +71,8 @@ async function insertIntoDatabase<T>(sql: string, values: any, tableName: string
 
 export const addUser = (user: Omit<User, 'id' | 'created_at' | 'is_active'>, connection?: any): Promise<User> => {
     return insertIntoDatabase<User>(
-        'INSERT INTO `users` (`name`, `email`, `password`, `role`) VALUES (?, ?, ?, ?)',
-        [user.name, user.email, user.password, user.role],
+        'INSERT INTO `users` (`name`, `email`, `phone`, `password`, `role`) VALUES (?, ?, ?, ?, ?)',
+        [user.name, user.email, user.phone, user.password, user.role],
         '`users`',
         connection
     );
