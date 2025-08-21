@@ -85,7 +85,7 @@ export default function LeadCaptureDialog({ adminId, items, trigger }: LeadCaptu
 
   const defaultTrigger = (
     <Button 
-      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse"
+      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
       size="sm"
     >
       <Sparkles className="h-4 w-4 mr-2" />
