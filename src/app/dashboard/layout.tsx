@@ -161,6 +161,15 @@ export default function DashboardLayout({
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
+                        {/* Leads */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/leads' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/leads" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                              Leads
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
                         {/* Users */}
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/users' ? 'bg-slate-700' : ''}`}>
@@ -206,6 +215,15 @@ export default function DashboardLayout({
                             <Link href="/dashboard/credit" className="flex items-center gap-3 px-3 py-2">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                               Credit
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {/* Leads */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild className={`text-white hover:bg-slate-700 rounded-lg ${pathname === '/dashboard/leads' ? 'bg-slate-700' : ''}`}>
+                            <Link href="/dashboard/leads" className="flex items-center gap-3 px-3 py-2">
+                              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                              Leads
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

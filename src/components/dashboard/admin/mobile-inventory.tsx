@@ -7,6 +7,7 @@ import { ShoppingCart, Package, IndianRupee, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { recordSale } from '@/lib/actions';
 import CreditSaleDialog from './credit-sale-dialog';
+import LeadCaptureDialog from './lead-capture-dialog';
 
 interface StockDataItem {
   itemId: number;
@@ -28,6 +29,7 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
   const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set());
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockDataItem | null>(null);
+  const [leadCaptureDialogOpen, setLeadCaptureDialogOpen] = useState(false);
 
   const handleQuickSale = async (item: StockDataItem) => {
     if (item.available <= 0) return;
@@ -53,8 +55,8 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
       });
     } else {
       toast({
-        title: "Sale Recorded",
-        description: `1 ${item.itemName} sold successfully!`,
+        title: "Sale Recorded!",
+        description: `Successfully sold 1 ${item.itemName}`,
       });
       // Refresh the page to show updated data
       window.location.reload();
@@ -67,10 +69,25 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
     });
   };
 
+  const handleCreditSale = (item: StockDataItem) => {
+    setSelectedItem(item);
+    setCreditDialogOpen(true);
+  };
+
+  // Convert stockData to items format for LeadCaptureDialog
+  const itemsForLeads = stockData.map(item => ({
+    id: item.itemId,
+    name: item.itemName,
+    sku: item.sku
+  }));
+
   return (
     <div className="space-y-4 p-4">
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold">Quick Sale</h1>
+        <div className="flex items-center justify-center gap-4 mb-2">
+          <h1 className="text-2xl font-bold">Quick Sale</h1>
+          <LeadCaptureDialog adminId={adminId} items={itemsForLeads} />
+        </div>
         <p className="text-muted-foreground">Tap to record sale</p>
       </div>
       
@@ -124,10 +141,7 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
                   </Button>
                   
                   <button
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setCreditDialogOpen(true);
-                    }}
+                    onClick={() => handleCreditSale(item)}
                     disabled={item.available <= 0}
                     className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md border border-orange-500 text-orange-600 bg-transparent hover:bg-transparent hover:text-orange-600 hover:border-orange-500 focus:bg-transparent focus:text-orange-600 focus:border-orange-500 active:bg-transparent active:text-orange-600 active:border-orange-500 hover:opacity-100 focus:opacity-100 active:opacity-100 disabled:opacity-100 disabled:text-orange-400 disabled:border-orange-300 disabled:cursor-not-allowed focus:outline-none focus:ring-0 transition-none"
                   >
@@ -151,12 +165,9 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
         </Card>
       )}
       
-      <CreditSaleDialog 
-        isOpen={creditDialogOpen}
-        onClose={() => {
-          setCreditDialogOpen(false);
-          setSelectedItem(null);
-        }}
+      <CreditSaleDialog
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
         item={selectedItem}
         adminId={adminId}
       />

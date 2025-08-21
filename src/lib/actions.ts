@@ -5,11 +5,14 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import bcrypt from 'bcryptjs';
 import {
-  addUser,
+  addUser as dbAddUser,
   addInventoryLot as dbAddInventoryLot,
   addAssignment as dbAddAssignment,
   addSale as dbAddSale,
   addLog,
+  addItem as dbAddItem,
+  addCategory as dbAddCategory,
+  addLead as dbAddLead,
   getUsers as dbGetUsers,
   getCategories as dbGetCategories,
   getItems as dbGetItems,
@@ -18,6 +21,7 @@ import {
   getUserById as dbGetUserById,
   getSales as dbGetSales,
   getAuditLogs as dbGetAuditLogs,
+  getLeads as dbGetLeads,
 } from "./data";
 import type { AuditLog, Assignment, User, Item } from "./types";
 import pool from "./db";
@@ -301,6 +305,24 @@ export async function getUsers(): Promise<User[]> {
     } catch (error) {
         console.error("Failed to fetch users:", error);
         throw new Error('Error: Failed to fetch users.');
+    }
+}
+
+export async function getItems(): Promise<Item[]> {
+    try {
+        return await dbGetItems();
+    } catch (error) {
+        console.error("Failed to fetch items:", error);
+        return [];
+    }
+}
+
+export async function getLeads() {
+    try {
+        return await dbGetLeads();
+    } catch (error) {
+        console.error("Failed to fetch leads:", error);
+        return [];
     }
 }
 
@@ -1013,6 +1035,443 @@ export async function markCreditSaleCompleted(saleId: number) {
     if (connection) await connection.rollback();
     const errorMessage = error instanceof Error ? error.message : 'Error: Failed to mark credit sale as completed.';
     return { error: errorMessage };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+// Item creation
+const createItemSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  sku: z.string().min(1, 'SKU is required'),
+  categoryId: z.coerce.number().int().min(1, 'Category is required'),
+  defaultSellingPrice: z.coerce.number().min(0),
+});
+
+export async function createItem(formData: FormData) {
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const parsed = createItemSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { error: 'Invalid data provided.' };
+    }
+    const { name, sku, categoryId, defaultSellingPrice } = parsed.data;
+
+    const item = await dbAddItem({
+      name,
+      sku,
+      category_id: categoryId,
+      default_selling_price: defaultSellingPrice,
+    } as any);
+
+    try {
+      await logAction(1, 'CREATE', 'Item', item.id);
+    } catch (e) {
+      console.error('Failed to log createItem:', e);
+    }
+
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Item created successfully.' };
+  } catch (error) {
+    console.error('createItem error:', error);
+    const message = error instanceof Error ? error.message : 'Error: Failed to create item.';
+    return { error: message };
+  }
+}
+
+export async function deleteItem(itemId: number) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Check if item has any inventory lots, assignments, or sales
+    const [inventoryLots] = await connection.query('SELECT COUNT(*) as count FROM inventory_lots WHERE item_id = ?', [itemId]);
+    const [assignments] = await connection.query('SELECT COUNT(*) as count FROM assignments WHERE item_id = ?', [itemId]);
+    const [sales] = await connection.query('SELECT COUNT(*) as count FROM sales WHERE item_id = ?', [itemId]);
+    const [creditSales] = await connection.query('SELECT COUNT(*) as count FROM credit_sales WHERE item_id = ?', [itemId]);
+
+    if ((inventoryLots as any)[0].count > 0 || (assignments as any)[0].count > 0 || (sales as any)[0].count > 0 || (creditSales as any)[0].count > 0) {
+      return { error: 'Cannot delete item. It has associated inventory, assignments, or sales records.' };
+    }
+
+    // Delete the item
+    await connection.query('DELETE FROM items WHERE id = ?', [itemId]);
+    
+    try {
+      await logAction(1, 'DELETE', 'Item', itemId, connection);
+    } catch (e) {
+      console.error('Failed to log deleteItem:', e);
+    }
+
+    await connection.commit();
+    
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Item deleted successfully.' };
+  } catch (error) {
+    console.error('deleteItem error:', error);
+    if (connection) await connection.rollback();
+    const message = error instanceof Error ? error.message : 'Error: Failed to delete item.';
+    return { error: message };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+const updateItemSchema = z.object({
+  itemId: z.coerce.number().int().min(1),
+  name: z.string().min(1, 'Name is required'),
+  sku: z.string().min(1, 'SKU is required'),
+  categoryId: z.coerce.number().int().min(1, 'Category is required'),
+  defaultSellingPrice: z.coerce.number().min(0),
+});
+
+export async function updateItem(formData: FormData) {
+  let connection;
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const parsed = updateItemSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { error: 'Invalid data provided.' };
+    }
+    const { itemId, name, sku, categoryId, defaultSellingPrice } = parsed.data;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Update the item
+    await connection.query(
+      'UPDATE items SET name = ?, sku = ?, category_id = ?, default_selling_price = ? WHERE id = ?',
+      [name, sku, categoryId, defaultSellingPrice, itemId]
+    );
+    
+    try {
+      await logAction(1, 'UPDATE', 'Item', itemId, connection);
+    } catch (e) {
+      console.error('Failed to log updateItem:', e);
+    }
+
+    await connection.commit();
+    
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Item updated successfully.' };
+  } catch (error) {
+    console.error('updateItem error:', error);
+    if (connection) await connection.rollback();
+    const message = error instanceof Error ? error.message : 'Error: Failed to update item.';
+    return { error: message };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+// Category creation
+const createCategorySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+});
+
+export async function createCategory(formData: FormData) {
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const parsed = createCategorySchema.safeParse(raw);
+    if (!parsed.success) {
+      return { error: 'Invalid data provided.' };
+    }
+    const { name, description } = parsed.data;
+
+    const category = await dbAddCategory({
+      name,
+      description: description || null,
+    } as any);
+
+    try {
+      await logAction(1, 'CREATE', 'Category', category.id);
+    } catch (e) {
+      console.error('Failed to log createCategory:', e);
+    }
+
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Category created successfully.' };
+  } catch (error) {
+    console.error('createCategory error:', error);
+    const message = error instanceof Error ? error.message : 'Error: Failed to create category.';
+    return { error: message };
+  }
+}
+
+export async function deleteCategory(categoryId: number) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Check if category has any items
+    const [items] = await connection.query('SELECT COUNT(*) as count FROM items WHERE category_id = ?', [categoryId]);
+
+    if ((items as any)[0].count > 0) {
+      return { error: 'Cannot delete category. It has associated items.' };
+    }
+
+    // Delete the category
+    await connection.query('DELETE FROM categories WHERE id = ?', [categoryId]);
+    
+    try {
+      await logAction(1, 'DELETE', 'Category', categoryId, connection);
+    } catch (e) {
+      console.error('Failed to log deleteCategory:', e);
+    }
+
+    await connection.commit();
+    
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Category deleted successfully.' };
+  } catch (error) {
+    console.error('deleteCategory error:', error);
+    if (connection) await connection.rollback();
+    const message = error instanceof Error ? error.message : 'Error: Failed to delete category.';
+    return { error: message };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+const updateCategorySchema = z.object({
+  categoryId: z.coerce.number().int().min(1),
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+});
+
+export async function updateCategory(formData: FormData) {
+  let connection;
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const parsed = updateCategorySchema.safeParse(raw);
+    if (!parsed.success) {
+      return { error: 'Invalid data provided.' };
+    }
+    const { categoryId, name, description } = parsed.data;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Update the category
+    await connection.query(
+      'UPDATE categories SET name = ?, description = ? WHERE id = ?',
+      [name, description || null, categoryId]
+    );
+    
+    try {
+      await logAction(1, 'UPDATE', 'Category', categoryId, connection);
+    } catch (e) {
+      console.error('Failed to log updateCategory:', e);
+    }
+
+    await connection.commit();
+    
+    revalidatePath('/dashboard/inventory');
+    revalidatePath('/dashboard');
+    return { success: 'Category updated successfully.' };
+  } catch (error) {
+    console.error('updateCategory error:', error);
+    if (connection) await connection.rollback();
+    const message = error instanceof Error ? error.message : 'Error: Failed to update category.';
+    return { error: message };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+// Lead management actions
+const createLeadSchema = z.object({
+  customer_name: z.string().min(1, 'Customer name is required'),
+  customer_phone: z.string().min(10, 'Valid phone number is required'),
+  customer_email: z.string().email().optional().or(z.literal('')),
+  customer_address: z.string().optional(),
+  interested_item_id: z.coerce.number().optional(),
+  notes: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  follow_up_date: z.string().optional(),
+});
+
+export async function createLead(formData: FormData) {
+  try {
+    console.log('createLead called with formData:', Object.fromEntries(formData.entries()));
+    
+    const raw = Object.fromEntries(formData.entries());
+    console.log('Raw form data:', raw);
+    
+    const parsed = createLeadSchema.safeParse(raw);
+    
+    if (!parsed.success) {
+      console.error('Schema validation failed:', parsed.error);
+      return { error: `Invalid lead data: ${parsed.error.issues.map(i => i.message).join(', ')}` };
+    }
+
+    console.log('Parsed data:', parsed.data);
+
+    const { customer_name, customer_phone, customer_email, customer_address, interested_item_id, notes, priority, follow_up_date } = parsed.data;
+    const admin_user_id = parseInt(raw.admin_user_id as string);
+
+    if (isNaN(admin_user_id)) {
+      console.error('Invalid admin_user_id:', raw.admin_user_id);
+      return { error: 'Invalid admin user ID' };
+    }
+
+    console.log('About to call dbAddLead with:', {
+      admin_user_id,
+      customer_name,
+      customer_phone,
+      customer_email: customer_email || '',
+      customer_address: customer_address || '',
+      interested_item_id: interested_item_id || null,
+      notes: notes || '',
+      status: 'new',
+      priority,
+      follow_up_date: follow_up_date || null
+    });
+
+    const result = await dbAddLead(
+      admin_user_id,
+      customer_name,
+      customer_phone,
+      customer_email || '',
+      customer_address || '',
+      interested_item_id || null,
+      notes || '',
+      'new',
+      priority,
+      follow_up_date || null
+    );
+
+    console.log('dbAddLead result:', result);
+
+    await addLog({
+      user_id: admin_user_id,
+      action: 'CREATE',
+      entity_type: 'lead',
+      entity_id: result.id
+    });
+    
+    revalidatePath('/dashboard/leads');
+    return { success: true, leadId: result.id };
+  } catch (error) {
+    console.error('Failed to create lead - detailed error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    return { error: `Failed to create lead: ${error instanceof Error ? error.message : 'Unknown error'}` };
+  }
+}
+
+export async function getLeadsPageData() {
+  try {
+    const [users, items, leads] = await Promise.all([
+      getUsers(),
+      getItems(),
+      getLeads()
+    ]);
+
+    // Join leads with user and item data
+    const leadsWithDetails = leads.map(lead => ({
+      ...lead,
+      admin_name: users.find(u => u.id === lead.admin_user_id)?.name || 'Unknown',
+      item_name: lead.interested_item_id ? items.find(i => i.id === lead.interested_item_id)?.name || 'Unknown Item' : null
+    }));
+
+    return {
+      data: {
+        users,
+        items,
+        leads: leadsWithDetails
+      }
+    };
+  } catch (error) {
+    console.error('Failed to fetch leads page data:', error);
+    return { error: 'Failed to fetch leads data' };
+  }
+}
+
+const updateLeadSchema = z.object({
+  id: z.coerce.number(),
+  customer_name: z.string().min(1),
+  customer_phone: z.string().min(10),
+  customer_email: z.string().email().optional().or(z.literal('')),
+  customer_address: z.string().optional(),
+  interested_item_id: z.coerce.number().optional(),
+  notes: z.string().optional(),
+  status: z.enum(['new', 'contacted', 'interested', 'converted', 'lost']),
+  priority: z.enum(['low', 'medium', 'high']),
+  follow_up_date: z.string().optional(),
+});
+
+export async function updateLead(formData: FormData) {
+  let connection;
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const parsed = updateLeadSchema.safeParse(raw);
+    
+    if (!parsed.success) {
+      return { error: 'Invalid lead data' };
+    }
+
+    const { id, customer_name, customer_phone, customer_email, customer_address, interested_item_id, notes, status, priority, follow_up_date } = parsed.data;
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    await connection.execute(
+      `UPDATE leads SET 
+        customer_name = ?, customer_phone = ?, customer_email = ?, customer_address = ?,
+        interested_item_id = ?, notes = ?, status = ?, priority = ?, follow_up_date = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [
+        customer_name, 
+        customer_phone, 
+        customer_email || null, 
+        customer_address || null,
+        interested_item_id || null, 
+        notes || null, 
+        status, 
+        priority, 
+        follow_up_date || null, 
+        id
+      ]
+    );
+
+    await addLog('UPDATE', 'lead', id, 1, connection);
+    await connection.commit();
+
+    revalidatePath('/dashboard/leads');
+    return { success: true };
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Failed to update lead:', error);
+    return { error: 'Failed to update lead' };
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+export async function deleteLead(leadId: number) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    await connection.execute('DELETE FROM leads WHERE id = ?', [leadId]);
+    await addLog('DELETE', 'lead', leadId, 1, connection);
+    await connection.commit();
+
+    revalidatePath('/dashboard/leads');
+    return { success: true };
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Failed to delete lead:', error);
+    return { error: 'Failed to delete lead' };
   } finally {
     if (connection) connection.release();
   }

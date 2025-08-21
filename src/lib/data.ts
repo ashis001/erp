@@ -1,5 +1,5 @@
 import pool from './db';
-import type { User, Category, Item, InventoryLot, Assignment, Sale, AuditLog } from './types';
+import type { User, Category, Item, InventoryLot, Assignment, Sale, AuditLog, Lead } from './types';
 
 // --- Data fetching functions ---
 
@@ -35,6 +35,7 @@ export const getInventoryLots = (): Promise<InventoryLot[]> => queryDatabase<Inv
 export const getAssignments = (): Promise<Assignment[]> => queryDatabase<Assignment>('SELECT * FROM `assignments`');
 export const getSales = (): Promise<Sale[]> => queryDatabase<Sale>('SELECT * FROM `sales`');
 export const getAuditLogs = (): Promise<AuditLog[]> => queryDatabase<AuditLog>('SELECT * FROM `audit_logs`');
+export const getLeads = (): Promise<Lead[]> => queryDatabase<Lead>('SELECT * FROM `leads`');
 
 // --- Data manipulation functions ---
 
@@ -78,6 +79,60 @@ export const addUser = (user: Omit<User, 'id' | 'created_at' | 'is_active'>, con
     );
 }
 
+// Create a new item
+export const addItem = (item: Omit<Item, 'id' | 'created_at'>, connection?: any): Promise<Item> => {
+    return insertIntoDatabase<Item>(
+        'INSERT INTO `items` (`name`, `sku`, `category_id`, `default_selling_price`) VALUES (?, ?, ?, ?)',
+        [item.name, item.sku, item.category_id, item.default_selling_price],
+        '`items`',
+        connection
+    );
+}
+
+// Create a new category
+export const addCategory = (name: string, description: string = '') => {
+    return insertIntoDatabase('categories', { name, description });
+};
+
+export const addLead = (
+    admin_user_id: number,
+    customer_name: string,
+    customer_phone: string,
+    customer_email: string = '',
+    customer_address: string = '',
+    interested_item_id: number | null = null,
+    notes: string = '',
+    status: string = 'new',
+    priority: string = 'medium',
+    follow_up_date: string | null = null
+) => {
+    try {
+        console.log('addLead called with parameters:', {
+            admin_user_id,
+            customer_name,
+            customer_phone,
+            customer_email,
+            customer_address,
+            interested_item_id,
+            notes,
+            status,
+            priority,
+            follow_up_date
+        });
+
+        const now = new Date().toISOString();
+        const sql = 'INSERT INTO `leads` (`admin_user_id`, `customer_name`, `customer_phone`, `customer_email`, `customer_address`, `interested_item_id`, `notes`, `status`, `priority`, `follow_up_date`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        const values = [admin_user_id, customer_name, customer_phone, customer_email || null, customer_address || null, interested_item_id, notes || null, status, priority, follow_up_date, now, now];
+        
+        console.log('SQL query:', sql);
+        console.log('SQL values:', values);
+
+        return insertIntoDatabase(sql, values, '`leads`');
+    } catch (error) {
+        console.error('Error in addLead function:', error);
+        throw error;
+    }
+};
 
 export const addInventoryLot = (lot: Omit<InventoryLot, 'id' | 'created_at'>, connection?: any): Promise<InventoryLot> => {
     return insertIntoDatabase<InventoryLot>(
