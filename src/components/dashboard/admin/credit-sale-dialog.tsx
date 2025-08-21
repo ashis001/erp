@@ -161,8 +161,13 @@ export default function CreditSaleDialog({ isOpen, onClose, item, adminId }: Cre
 
   if (!item) return null;
 
+  console.log('🟢 CreditSaleDialog rendering - isOpen:', isOpen, 'item:', item?.itemName);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { 
+      console.log('🟢 Dialog onOpenChange called with:', open);
+      if (!open) onClose(); 
+    }}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

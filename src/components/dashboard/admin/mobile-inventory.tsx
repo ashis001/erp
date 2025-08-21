@@ -70,8 +70,14 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
   };
 
   const handleCreditSale = (item: StockDataItem) => {
+    console.log('🔵 Credit button clicked for item:', item.itemName, 'available:', item.available);
     setSelectedItem(item);
+    console.log('🔵 Setting selectedItem and opening dialog');
     setCreditDialogOpen(true);
+    console.log('🔵 creditDialogOpen set to true');
+    queueMicrotask(() => {
+      console.log('[Credit] State after click — selectedItem:', selectedItem, 'open:', creditDialogOpen);
+    });
   };
 
   // Convert stockData to items format for LeadCaptureDialog
@@ -143,7 +149,7 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
                   <button
                     onClick={() => handleCreditSale(item)}
                     disabled={item.available <= 0}
-                    className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md border border-orange-500 text-orange-600 bg-transparent hover:bg-transparent hover:text-orange-600 hover:border-orange-500 focus:bg-transparent focus:text-orange-600 focus:border-orange-500 active:bg-transparent active:text-orange-600 active:border-orange-500 hover:opacity-100 focus:opacity-100 active:opacity-100 disabled:opacity-100 disabled:text-orange-400 disabled:border-orange-300 disabled:cursor-not-allowed focus:outline-none focus:ring-0 transition-none"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md border border-orange-500 text-orange-600 bg-transparent hover:bg-transparent hover:text-orange-600 hover:border-orange-500 focus:bg-transparent focus:text-orange-600 focus:border-orange-500 active:bg-transparent active:text-orange-600 active:border-orange-500 hover:opacity-100 focus:opacity-100 active:opacity-100 disabled:opacity-100 disabled:text-orange-400 disabled:border-orange-300 disabled:cursor-not-allowed focus:outline-none focus:ring-0 transition-none relative z-[100] pointer-events-auto"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
                     Credit
@@ -166,8 +172,8 @@ export default function MobileInventory({ stockData, adminId }: MobileInventoryP
       )}
       
       <CreditSaleDialog
-        open={creditDialogOpen}
-        onOpenChange={setCreditDialogOpen}
+        isOpen={creditDialogOpen}
+        onClose={() => setCreditDialogOpen(false)}
         item={selectedItem}
         adminId={adminId}
       />
