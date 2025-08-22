@@ -90,8 +90,13 @@ export const addItem = (item: Omit<Item, 'id' | 'created_at'>, connection?: any)
 }
 
 // Create a new category
-export const addCategory = (name: string, description: string = '') => {
-    return insertIntoDatabase('categories', { name, description });
+export const addCategory = (name: string, description: string = '', connection?: any): Promise<Category> => {
+    return insertIntoDatabase<Category>(
+        'INSERT INTO `categories` (`name`, `description`) VALUES (?, ?)',
+        [name, description],
+        '`categories`',
+        connection
+    );
 };
 
 export const addLead = (

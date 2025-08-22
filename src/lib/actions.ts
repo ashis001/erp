@@ -597,7 +597,7 @@ export async function createUser(formData: FormData) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = await addUser({
+        const newUser = await dbAddUser({
             name,
             email,
             phone,
