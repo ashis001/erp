@@ -103,7 +103,7 @@ export default function AddInventoryDialog({ isOpen, onClose, categories, items 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px] z-50">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add Inventory Lot</DialogTitle>
           <DialogDescription>
