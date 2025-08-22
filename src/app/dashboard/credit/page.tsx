@@ -154,6 +154,7 @@ export default function CreditPage() {
   const totalPendingAmount = activeSales.reduce((sum, sale) => sum + Number(sale.pending_balance ?? 0), 0);
   const totalDownPayments = filteredSales.reduce((sum, sale) => sum + Number(sale.down_payment ?? 0), 0);
   const completedSales = filteredSales.filter(sale => sale.status === 'completed');
+  const totalCreditsCount = currentUser?.role === 'superadmin' ? creditSales.length : filteredSales.length;
 
   if (isLoading || isUserLoading) {
     return (
@@ -222,9 +223,9 @@ export default function CreditPage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{creditSales.length}</div>
+                <div className="text-2xl font-bold">{totalCreditsCount}</div>
                 <p className="text-xs text-muted-foreground">
-                  All time
+                  {currentUser?.role === 'superadmin' ? 'All time (all admins)' : 'Your credits'}
                 </p>
               </CardContent>
             </Card>
