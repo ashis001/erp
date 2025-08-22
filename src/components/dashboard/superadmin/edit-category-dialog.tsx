@@ -33,7 +33,11 @@ export default function EditCategoryDialog({ category, isOpen, onClose }: EditCa
     setIsSubmitting(true);
 
     try {
-      const result = await updateCategory(category.id, name, description);
+      const formData = new FormData();
+      formData.append("categoryId", String(category.id));
+      formData.append("name", name);
+      formData.append("description", description);
+      const result = await updateCategory(formData);
       if (result.error) {
         toast({
           title: "Error",
